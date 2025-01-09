@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">budgetmanager</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="navigation_drawer_open">Open Navigation Drawer</string>
+    <string name="navigation_drawer_close">Close Navigation Drawer</string>
+    <string-array name="category_array">
+        <item>Choose Category</item>
+        <item>Salary</item>
+        <item>Loan</item>
+        <item>Food</item>
+        <item>Grocery</item>
+        <item>Other</item>
+    </string-array>
+
+    <string name="icon">Icon</string>
+
+</resources>
