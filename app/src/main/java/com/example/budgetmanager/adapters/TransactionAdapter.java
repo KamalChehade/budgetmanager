@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.budgetmanager.R;
 import com.example.budgetmanager.model.Transaction;
@@ -15,6 +16,7 @@ import com.example.budgetmanager.model.Transaction;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder> {
 
@@ -35,43 +37,36 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     public void onBindViewHolder(@NonNull TransactionViewHolder holder, int position) {
         Transaction transaction = transactionList.get(position);
 
-        // Debugging: Log the data being bound to check if it matches
         Log.d("TransactionAdapter", "Binding transaction: " + transaction.getCategory() + ", " + transaction.getAmount() + ", " + transaction.getDate());
 
-        // Check if views are properly initialized
-        if (holder.category == null) {
-            Log.e("TransactionAdapter", "Category TextView is null");
-        }
-        if (holder.amount == null) {
-            Log.e("TransactionAdapter", "Amount TextView is null");
-        }
-        if (holder.note == null) {
-            Log.e("TransactionAdapter", "Note TextView is null");
-        }
-        if (holder.date == null) {
-            Log.e("TransactionAdapter", "Date TextView is null");
-        }
-        if (holder.categoryIcon == null) {
-            Log.e("TransactionAdapter", "Category Icon ImageView is null");
-        }
-
-        // Bind data if views are not null
         if (holder.category != null) {
             holder.category.setText(transaction.getCategory());
         }
         if (holder.amount != null) {
-            holder.amount.setText(String.format("%.2f", transaction.getAmount()));
+            // Format the amount as currency and append $ symbol
+            String amountWithCurrency = "$" + String.format("%.2f", transaction.getAmount());
+            holder.amount.setText(amountWithCurrency);
         }
         if (holder.note != null) {
             holder.note.setText(transaction.getNote());
         }
         if (holder.date != null) {
-            // Convert Date object to String before setting it in the TextView
-            String formattedDate = formatDate(transaction.getDate());
-            holder.date.setText(formattedDate);  // Set the formatted date as a String
+            // Format the date to the required format (e.g., "January 09, 2025")
+            SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
+            String formattedDate = sdf.format(transaction.getDate());
+            holder.date.setText(formattedDate);
         }
 
-        // Set the category icon based on the category type
+        if (holder.accountLbl != null) {
+            if (transaction.getTransactionType().equals("Income")) {
+                holder.accountLbl.setText("Income");
+                holder.accountLbl.setBackgroundColor(ContextCompat.getColor(context, R.color.greenColor)); // Green background for Income
+            } else if (transaction.getTransactionType().equals("Expense")) {
+                holder.accountLbl.setText("Expense");
+                holder.accountLbl.setBackgroundResource(R.drawable.accounts_bg); // Default background for Expense
+            }
+        }
+
         if (holder.categoryIcon != null) {
             int iconResId = getCategoryIcon(transaction.getCategory());
             holder.categoryIcon.setImageResource(iconResId);
@@ -113,19 +108,22 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         }
     }
     public static class TransactionViewHolder extends RecyclerView.ViewHolder {
-        TextView category, amount, note, date; // Add the date field here
+        TextView category, amount, note, date, accountLbl; // Add accountLbl here
         ImageView categoryIcon;
 
         public TransactionViewHolder(View itemView) {
             super(itemView);
+
+            // Initialize views using findViewById()
             category = itemView.findViewById(R.id.transactionCategory);
             amount = itemView.findViewById(R.id.transactionAmount);
-            note = itemView.findViewById(R.id.note);  // Make sure 'note' is in the layout
+            note = itemView.findViewById(R.id.note); // Make sure 'note' is in the layout
             date = itemView.findViewById(R.id.transactionDate); // Bind the date TextView here
+            accountLbl = itemView.findViewById(R.id.accountLbl); // Bind the accountLbl TextView here
             categoryIcon = itemView.findViewById(R.id.categoryIcon); // Bind the category icon ImageView here
 
             // Ensure views are found correctly
-            if (category == null || amount == null || note == null || date == null || categoryIcon == null) {
+            if (category == null || amount == null || note == null || date == null || accountLbl == null || categoryIcon == null) {
                 Log.e("TransactionAdapter", "Error binding views: one or more views are null");
             }
         }
