@@ -11,13 +11,23 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Expense Manager Image -->
+
         <!-- Welcome Message -->
+        <ImageView
+            android:id="@+id/image_expensemanager"
+            android:layout_width="204dp"
+            android:layout_height="135dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp"
+             android:src="@drawable/ic_expensemanager" />
+
         <TextView
             android:id="@+id/welcome_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:text="Welcome to Budget Buddy!"
+            android:text="Welcome to Expense Manager!"
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="@android:color/black"
@@ -32,7 +42,6 @@
             android:textSize="16sp"
             android:textColor="@android:color/darker_gray"
             android:layout_marginBottom="16dp" />
-
         <!-- Name Input -->
         <TextView
             android:layout_width="wrap_content"
@@ -121,13 +130,7 @@
             android:text="Achieving Financial Goals"
             android:textSize="14sp"
             android:layout_marginBottom="16dp" />
-        <CheckBox
-            android:id="@+id/checkbox_other"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Other"
-            android:textSize="14sp"
-            android:layout_marginBottom="16dp" />
+
         <!-- Register Button -->
         <Button
             android:id="@+id/register_button"

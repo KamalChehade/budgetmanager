@@ -39,37 +39,35 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         Transaction transaction = transactionList.get(position);
 
         holder.category.setText(transaction.getCategory());
-        // Format the amount as currency and append $ symbol
-        String amountWithCurrency = "$" + String.format("%.2f", transaction.getAmount());
+
+         String amountWithCurrency = "$" + String.format("%.2f", transaction.getAmount());
         holder.amount.setText(amountWithCurrency);
         holder.note.setText(transaction.getNote());
 
-        // Format the date to the required format (e.g., "January 09, 2025")
-        SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
+         SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
         String formattedDate = sdf.format(transaction.getDate());
         holder.date.setText(formattedDate);
 
-        // Handle transaction type for accountLbl
+
         if (transaction.getTransactionType().equals("Income")) {
             holder.accountLbl.setText("Income");
-            holder.accountLbl.setBackgroundColor(ContextCompat.getColor(context, R.color.greenColor)); // Green background for Income
+            holder.accountLbl.setBackgroundColor(ContextCompat.getColor(context, R.color.greenColor));
         } else if (transaction.getTransactionType().equals("Expense")) {
             holder.accountLbl.setText("Expense");
-            holder.accountLbl.setBackgroundResource(R.drawable.accounts_bg); // Default background for Expense
+            holder.accountLbl.setBackgroundResource(R.drawable.accounts_bg);
         }
 
-        // Set the category icon based on the category type
-        int iconResId = getCategoryIcon(transaction.getCategory());
+         int iconResId = getCategoryIcon(transaction.getCategory());
         holder.categoryIcon.setImageResource(iconResId);
 
-        // Add long press event listener for the delete confirmation
+
         holder.itemView.setOnLongClickListener(v -> {
-             onTransactionClickListener.onTransactionLongClick(transaction); // Notify listener
-            return true; // Indicate the long press was handled
+             onTransactionClickListener.onTransactionLongClick(transaction);
+            return true;
         });
 
         holder.itemView.setOnClickListener(v -> {
-            v.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent)); // Reset background color when clicked
+            v.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent));
         });
     }
 
@@ -94,11 +92,11 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             case "Grocery":
                 return R.drawable.ic_grocery;
             default:
-                return R.drawable.ic_other; // Default icon
+                return R.drawable.ic_other;
         }
     }
 
-    // Interface to handle long click
+
     public interface OnTransactionClickListener {
         void onTransactionLongClick(Transaction transaction);
     }

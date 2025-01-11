@@ -25,31 +25,26 @@ public class ProfileFragment extends Fragment {
         profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
         View root = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        // Initialize Views
-        TextView displayName = root.findViewById(R.id.user_display_name);
+         TextView displayName = root.findViewById(R.id.user_display_name);
         TextView gender = root.findViewById(R.id.user_gender);
         TextView interests = root.findViewById(R.id.user_interests);
 
-        // Load data from SharedPreferences
-        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("BudgetBuddyPrefs", getContext().MODE_PRIVATE);
+         SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("BudgetBuddyPrefs", getContext().MODE_PRIVATE);
         String name = sharedPreferences.getString("userName", "John Doe");
         String genderValue = sharedPreferences.getString("gender", "Not Specified");
         boolean isSavingChecked = sharedPreferences.getBoolean("isSavingChecked", false);
         boolean isExpensesChecked = sharedPreferences.getBoolean("isExpensesChecked", false);
         boolean isGoalsChecked = sharedPreferences.getBoolean("isGoalsChecked", false);
 
-        // Populate Views
-        displayName.setText(name);
+         displayName.setText(name);
         gender.setText(genderValue);
 
-        // Construct Interests String
-        StringBuilder interestsString = new StringBuilder();
+         StringBuilder interestsString = new StringBuilder();
         if (isSavingChecked) interestsString.append("Saving Money, ");
         if (isExpensesChecked) interestsString.append("Tracking Expenses, ");
         if (isGoalsChecked) interestsString.append("Achieving Financial Goals");
 
-        // Remove trailing comma and space if needed
-        if (interestsString.length() > 0 && interestsString.charAt(interestsString.length() - 2) == ',') {
+         if (interestsString.length() > 0 && interestsString.charAt(interestsString.length() - 2) == ',') {
             interestsString.setLength(interestsString.length() - 2);
         }
 

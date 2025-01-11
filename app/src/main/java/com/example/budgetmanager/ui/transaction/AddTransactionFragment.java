@@ -19,7 +19,9 @@ import com.example.budgetmanager.R;
 import com.example.budgetmanager.databinding.FragmentAddTransactionBinding;
 import com.example.budgetmanager.model.Transaction;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class AddTransactionFragment extends DialogFragment {
 
@@ -34,19 +36,17 @@ public class AddTransactionFragment extends DialogFragment {
         binding = FragmentAddTransactionBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        // Initialize ViewModels
         addTransactionViewModel = new ViewModelProvider(this).get(AddTransactionViewModel.class);
-        sharedTransactionViewModel = new ViewModelProvider(requireActivity()).get(SharedTransactionViewModel.class); // SharedViewModel
+        sharedTransactionViewModel = new ViewModelProvider(requireActivity()).get(SharedTransactionViewModel.class);
 
-        // Setup button listeners
         binding.incomeBtn.setOnClickListener(v -> {
             addTransactionViewModel.setTransactionType("Income");
-            updateTransactionTypeUI(true); // Highlight Income button
+            updateTransactionTypeUI(true);
         });
 
         binding.expenseBtn.setOnClickListener(v -> {
             addTransactionViewModel.setTransactionType("Expense");
-            updateTransactionTypeUI(false); // Highlight Expense button
+            updateTransactionTypeUI(false);
         });
 
         setupCategorySpinner();
@@ -62,11 +62,10 @@ public class AddTransactionFragment extends DialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Set custom width for the dialog
         if (getDialog() != null && getDialog().getWindow() != null) {
             Window window = getDialog().getWindow();
             WindowManager.LayoutParams params = window.getAttributes();
-            params.width = WindowManager.LayoutParams.MATCH_PARENT; // Make the dialog fill the width
+            params.width = WindowManager.LayoutParams.MATCH_PARENT;
             window.setAttributes(params);
         }
     }
@@ -78,10 +77,9 @@ public class AddTransactionFragment extends DialogFragment {
     }
 
     private void setupCategorySpinner() {
-        // Define categories and their icons
         String[] categories = getResources().getStringArray(R.array.category_array);
         int[] icons = {
-                R.drawable.ic_placeholder, // Placeholder icon for "Choose Category"
+                R.drawable.ic_placeholder,
                 R.drawable.ic_salary,
                 R.drawable.ic_loan,
                 R.drawable.ic_food,
@@ -89,23 +87,18 @@ public class AddTransactionFragment extends DialogFragment {
                 R.drawable.ic_other
         };
 
-        // Set custom adapter
         CategorySpinnerAdapter adapter = new CategorySpinnerAdapter(requireContext(), categories, icons);
         binding.categorySpinner.setAdapter(adapter);
 
-        // Set default selection to "Choose Category" (index 0)
         binding.categorySpinner.setSelection(0);
-        addTransactionViewModel.setCategory(null); // No category selected initially
+        addTransactionViewModel.setCategory(null);
 
-        // Handle item selection
         binding.categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                // If "Choose Category" is selected, set category as null
                 if (position == 0) {
                     addTransactionViewModel.setCategory(null);
                 } else {
-                    // Set selected category
                     String selectedCategory = categories[position];
                     addTransactionViewModel.setCategory(selectedCategory);
                 }
@@ -119,19 +112,16 @@ public class AddTransactionFragment extends DialogFragment {
     }
 
     private void saveTransaction() {
-        // Validate and save transaction
         String transactionType = addTransactionViewModel.getTransactionType().getValue();
         String amountText = binding.amount.getText().toString();
         String note = binding.note.getText().toString();
         String category = addTransactionViewModel.getCategory().getValue();
-        boolean isRecurring = binding.recurringCheckbox.isChecked();
 
         if (transactionType == null || amountText.isEmpty() || category == null) {
             Toast.makeText(getContext(), "Please fill all required fields.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Validate that amount is a valid number
         double amount = 0;
         try {
             amount = Double.parseDouble(amountText);
@@ -140,40 +130,43 @@ public class AddTransactionFragment extends DialogFragment {
             return;
         }
 
-        // Get current date for the transaction as Date object
-        Date currentDate = new Date(); // Get the current date as Date object
+        String selectedDate = sharedTransactionViewModel.getSelectedDate().getValue();
+        Date transactionDate;
+        try {
+            if (selectedDate != null) {
+                boolean isMonthly = selectedDate.split(" ").length == 2;
+                boolean isYearly = selectedDate.split(" ").length == 1;
 
-        // Prepare the transaction data string for SharedPreferences (serialize Date to timestamp)
-        String transactionData = transactionType + "," + category + "," + amount + "," + note + "," + currentDate.getTime(); // Save the timestamp
-
-        // Log the data to ensure it's correct
-        Log.d("TransactionDebug", "Saving transaction: " + transactionData);  // Log the data being saved
-
-        // Check if the transaction data is valid before saving
-        if (transactionData.split(",").length != 5) {
-            Log.e("TransactionDebug", "Invalid transaction data format: " + transactionData);
+                if (!isMonthly && !isYearly) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
+                    transactionDate = sdf.parse(selectedDate);
+                } else {
+                    transactionDate = new Date();
+                }
+            } else {
+                transactionDate = new Date();
+            }
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Invalid selected date.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Save transaction to SharedPreferences
+        String transactionData = transactionType + "," + category + "," + amount + "," + note + "," + transactionDate.getTime();
+
         SharedPreferences preferences = requireContext().getSharedPreferences("transactions", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
 
-        // Retrieve the existing transactions from SharedPreferences
         String previousData = preferences.getString("allTransactions", "");
-        previousData += transactionData + ";"; // Append the new transaction
+        previousData += transactionData + ";";
 
         editor.putString("allTransactions", previousData);
-        editor.apply(); // Apply changes
+        editor.apply();
 
-        // Create a Transaction object using the Date object and update the SharedViewModel
-        Transaction transaction = new Transaction(transactionType, category, amount, note, currentDate); // Pass Date object
+        Transaction transaction = new Transaction(transactionType, category, amount, note, transactionDate);
         sharedTransactionViewModel.addTransaction(transaction);
 
-        // Show transaction saved message
         Toast.makeText(getContext(), "Transaction Saved", Toast.LENGTH_SHORT).show();
 
-        // Dismiss the dialog
         dismiss();
     }
 

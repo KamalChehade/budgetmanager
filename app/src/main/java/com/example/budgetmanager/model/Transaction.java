@@ -8,9 +8,9 @@ public class Transaction {
     private String category;
     private double amount;
     private String note;
-    private Date date;  // Use Date object
+    private Date date;
 
-    // Constructor with Date object
+
     public Transaction(String transactionType, String category, double amount, String note, Date date) {
         this.transactionType = transactionType;
         this.category = category;
@@ -40,26 +40,25 @@ public class Transaction {
         return date;
     }
 
-    // Method to get the current date in the desired format (day, month, year)
-    public static String getCurrentDate() {
+     public static String getCurrentDate() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM, yyyy");
-        return sdf.format(new Date());  // Format the current date as "Day Month, Year"
+        return sdf.format(new Date());
     }
 
-    // Method to format a Date object to string
+
     public static String formatDate(Date date) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM, yyyy");
-        return sdf.format(date);  // Format the given Date object
+        return sdf.format(date);
     }
 
-    // Method to parse a date string back into a Date object
+
     public static Date parseDate(String dateStr) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM, yyyy");
         try {
             return sdf.parse(dateStr);
         } catch (Exception e) {
             e.printStackTrace();
-            return null; // Return null if parsing fails
+            return null;
         }
     }
 }

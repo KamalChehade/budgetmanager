@@ -1,9 +1,14 @@
 package com.example.budgetmanager;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -11,11 +16,12 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.example.budgetmanager.databinding.ActivityMainBinding;
 import com.example.budgetmanager.ui.transaction.SharedTransactionViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.example.budgetmanager.databinding.ActivityMainBinding;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 
@@ -27,8 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private View dailyUnderline, monthlyUnderline, yearlyUnderline;
     private Calendar calendar;
     private SharedTransactionViewModel sharedTransactionViewModel;
-    private boolean isMonthlyView = false;  // Flag to track monthly view
-    private boolean isYearlyView = false;   // Flag to track yearly view
+    private boolean isMonthlyView = false;
+    private boolean isYearlyView = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,24 +66,25 @@ public class MainActivity extends AppCompatActivity {
         calendar = Calendar.getInstance();
         updateDateDisplay();
 
+
         previousDate.setOnClickListener(v -> {
             if (isYearlyView) {
-                calendar.add(Calendar.YEAR, -1);  // Move to the previous year
+                calendar.add(Calendar.YEAR, -1);
             } else if (isMonthlyView) {
-                calendar.add(Calendar.MONTH, -1);  // Move to the previous month
+                calendar.add(Calendar.MONTH, -1);
             } else {
-                calendar.add(Calendar.DAY_OF_MONTH, -1);  // Move to the previous day
+                calendar.add(Calendar.DAY_OF_MONTH, -1);
             }
             updateDateDisplay();
         });
 
         nextDate.setOnClickListener(v -> {
             if (isYearlyView) {
-                calendar.add(Calendar.YEAR, 1);  // Move to the next year
+                calendar.add(Calendar.YEAR, 1);
             } else if (isMonthlyView) {
-                calendar.add(Calendar.MONTH, 1);  // Move to the next month
+                calendar.add(Calendar.MONTH, 1);
             } else {
-                calendar.add(Calendar.DAY_OF_MONTH, 1);  // Move to the next day
+                calendar.add(Calendar.DAY_OF_MONTH, 1);
             }
             updateDateDisplay();
         });
@@ -85,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
         dailyToggle.setOnClickListener(v -> showDailyToggle());
         monthlyToggle.setOnClickListener(v -> showMonthlyToggle());
         yearlyToggle.setOnClickListener(v -> showYearlyToggle());
+
 
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             if (destination.getId() == R.id.navigation_home) {
@@ -95,24 +103,26 @@ public class MainActivity extends AppCompatActivity {
         });
 
         NavigationUI.setupWithNavController(binding.navView, navController);
+
+
+        ImageView gearIcon = findViewById(R.id.gear_icon);
+        gearIcon.setOnClickListener(this::showSettingsMenu);
     }
 
     private void updateDateDisplay() {
         String formattedDate;
         if (isYearlyView) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy", Locale.getDefault());  // Show year only
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy", Locale.getDefault());
             formattedDate = sdf.format(calendar.getTime());
         } else if (isMonthlyView) {
-            SimpleDateFormat sdf = new SimpleDateFormat("MMMM yyyy", Locale.getDefault());  // Show month and year
+            SimpleDateFormat sdf = new SimpleDateFormat("MMMM yyyy", Locale.getDefault());
             formattedDate = sdf.format(calendar.getTime());
         } else {
-            SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());  // Show full date
+            SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
             formattedDate = sdf.format(calendar.getTime());
         }
 
         currentDate.setText(formattedDate);
-
-        // Save the current date to SharedViewModel for HomeFragment
         sharedTransactionViewModel.setSelectedDate(formattedDate);
     }
 
@@ -128,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         monthlyToggle.setTextColor(getResources().getColor(android.R.color.darker_gray));
         yearlyToggle.setTextColor(getResources().getColor(android.R.color.darker_gray));
 
-        updateDateDisplay();  // Update the date display for daily view
+        updateDateDisplay();
     }
 
     private void showMonthlyToggle() {
@@ -143,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
         dailyToggle.setTextColor(getResources().getColor(android.R.color.darker_gray));
         yearlyToggle.setTextColor(getResources().getColor(android.R.color.darker_gray));
 
-        updateDateDisplay();  // Update the date display for monthly view
+        updateDateDisplay();
     }
 
     private void showYearlyToggle() {
@@ -158,6 +168,46 @@ public class MainActivity extends AppCompatActivity {
         dailyToggle.setTextColor(getResources().getColor(android.R.color.darker_gray));
         monthlyToggle.setTextColor(getResources().getColor(android.R.color.darker_gray));
 
-        updateDateDisplay();  // Update the date display for yearly view
+        updateDateDisplay();
     }
+
+    private void showSettingsMenu(View view) {
+        PopupMenu popupMenu = new PopupMenu(this, view);
+        popupMenu.getMenuInflater().inflate(R.menu.settings_menu, popupMenu.getMenu());
+        popupMenu.setOnMenuItemClickListener(this::onSettingsMenuItemClicked);
+        popupMenu.show();
+    }
+
+    private boolean onSettingsMenuItemClicked(MenuItem menuItem) {
+        if (menuItem.getItemId() == R.id.action_reset_transactions) {
+            resetAllTransactions();
+            return true;
+        }
+        return false;
+    }
+
+    private void resetAllTransactions() {
+
+          new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Reset Transactions")
+                .setMessage("Are you sure you want to reset all transactions? This action cannot be undone.")
+                .setPositiveButton("Yes", (dialog, which) -> {
+
+                     SharedPreferences preferences = getSharedPreferences("transactions", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.clear();
+                    editor.apply();
+
+
+                    if (sharedTransactionViewModel.getTransactionList().getValue() != null) {
+                        sharedTransactionViewModel.setTransactionList(new ArrayList<>());
+                    }
+
+
+                    Toast.makeText(this, "All transactions have been reset.", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
 }

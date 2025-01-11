@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">budgetmanager</string>
+    <string name="app_name">Expense Manager</string>
     <string name="title_home">Home</string>
-    <string name="title_profile">profile</string>
-     <string name="navigation_drawer_open">Open Navigation Drawer</string>
+    <string name="title_profile">Profile</string>
+    <string name="navigation_drawer_open">Open Navigation Drawer</string>
     <string name="navigation_drawer_close">Close Navigation Drawer</string>
     <string-array name="category_array">
         <item>Choose Category</item>
@@ -12,7 +12,5 @@
         <item>Grocery</item>
         <item>Other</item>
     </string-array>
-
     <string name="icon">Icon</string>
-
 </resources>
