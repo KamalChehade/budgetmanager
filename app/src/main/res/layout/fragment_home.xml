@@ -121,7 +121,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_plus"
-        app:backgroundTint="@color/orange"
+        app:backgroundTint="@color/colorPrimary"
         app:tint="@color/white" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

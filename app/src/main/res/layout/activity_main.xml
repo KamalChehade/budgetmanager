@@ -95,10 +95,8 @@
                         android:src="@drawable/ic_arrow_right" />
                 </LinearLayout>
 
-                <!-- Daily/Monthly Toggle Section -->
-                <!-- Daily/Monthly Toggle Section -->
                 <LinearLayout
-                    android:id="@+id/daily_monthly_toggle"
+                    android:id="@+id/daily_monthly_yearly_toggle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
@@ -161,7 +159,35 @@
                             android:background="@android:color/white"
                             android:visibility="gone" />
                     </LinearLayout>
+
+                    <!-- Yearly Toggle -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/yearly_toggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="Yearly"
+                            android:textColor="@android:color/white"
+                            android:textSize="16sp" />
+
+                        <!-- Underline for Yearly -->
+                        <View
+                            android:id="@+id/yearly_underline"
+                            android:layout_width="match_parent"
+                            android:layout_height="2dp"
+                            android:layout_marginTop="9dp"
+                            android:background="@android:color/white"
+                            android:visibility="gone" />
+                    </LinearLayout>
                 </LinearLayout>
+
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.appcompat.widget.Toolbar>

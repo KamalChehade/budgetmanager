@@ -7,10 +7,14 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
+
 import com.example.budgetmanager.R;
 import com.example.budgetmanager.adapters.TransactionAdapter;
 import com.example.budgetmanager.databinding.FragmentHomeBinding;
@@ -18,14 +22,15 @@ import com.example.budgetmanager.model.Transaction;
 import com.example.budgetmanager.ui.transaction.AddTransactionFragment;
 import com.example.budgetmanager.ui.transaction.SharedTransactionViewModel;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements TransactionAdapter.OnTransactionClickListener {
 
     private FragmentHomeBinding binding;
-    private HomeViewModel homeViewModel;
     private SharedTransactionViewModel sharedTransactionViewModel;
     private TransactionAdapter transactionAdapter;
 
@@ -35,7 +40,6 @@ public class HomeFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
         sharedTransactionViewModel = new ViewModelProvider(requireActivity()).get(SharedTransactionViewModel.class);
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
@@ -46,21 +50,25 @@ public class HomeFragment extends Fragment {
             addTransactionFragment.show(getParentFragmentManager(), "AddTransactionFragment");
         });
 
-        transactionAdapter = new TransactionAdapter(getContext());
+        // Initialize RecyclerView with TransactionAdapter
+        transactionAdapter = new TransactionAdapter(getContext(), this);
         binding.transactionsList.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.transactionsList.setAdapter(transactionAdapter);
 
         sharedTransactionViewModel.getTransactionList().observe(getViewLifecycleOwner(), transactions -> {
-            transactionAdapter.setTransactions(transactions);
-            calculateTotals(transactions);  // Calculate totals when transactions are updated
+            String selectedDate = sharedTransactionViewModel.getSelectedDate().getValue();
+            filterTransactionsByDate(transactions, selectedDate);  // Pass both transactions and selected date
         });
 
-        loadTransactions();  // Load transactions from SharedPreferences when fragment is created
+        // Observe changes in selected date
+        sharedTransactionViewModel.getSelectedDate().observe(getViewLifecycleOwner(), selectedDate -> {
+            loadTransactions(selectedDate);  // Reload transactions dynamically based on the selected date
+        });
 
         return root;
     }
 
-    private void loadTransactions() {
+    private void loadTransactions(String selectedDate) {
         SharedPreferences preferences = requireContext().getSharedPreferences("transactions", Context.MODE_PRIVATE);
         String allTransactions = preferences.getString("allTransactions", "");
 
@@ -90,10 +98,46 @@ public class HomeFragment extends Fragment {
             }
 
             sharedTransactionViewModel.setTransactionList(transactionList);
-            calculateTotals(transactionList);  // Calculate totals after loading transactions
-            transactionAdapter.setTransactions(transactionList);
+            filterTransactionsByDate(transactionList, selectedDate);  // Filter transactions by selected date
         } else {
             Log.d("TransactionDebug", "No transactions found in SharedPreferences");
+        }
+    }
+
+    private void filterTransactionsByDate(List<Transaction> transactions, String selectedDate) {
+        if (selectedDate != null) {
+            boolean isYearly = selectedDate.split(" ").length == 1; // Check if it's a year format
+            boolean isMonthly = selectedDate.split(" ").length == 2; // Check if it's a month/year format
+            SimpleDateFormat sdf;
+            List<Transaction> filteredTransactions = new ArrayList<>();
+
+            if (isYearly) {
+                // Format to "yyyy" (only year) for yearly filtering
+                sdf = new SimpleDateFormat("yyyy", Locale.getDefault());
+            } else if (isMonthly) {
+                // Format to "MMMM yyyy" (only month and year) for monthly filtering
+                sdf = new SimpleDateFormat("MMMM yyyy", Locale.getDefault());
+            } else {
+                // Format to "MMMM dd, yyyy" for daily filtering
+                sdf = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
+            }
+
+            for (Transaction transaction : transactions) {
+                String transactionDateFormatted = sdf.format(transaction.getDate());
+                if (transactionDateFormatted.equals(selectedDate)) {
+                    filteredTransactions.add(transaction);
+                }
+            }
+
+            if (!filteredTransactions.isEmpty()) {
+                transactionAdapter.setTransactions(filteredTransactions);
+                calculateTotals(filteredTransactions);  // Recalculate totals for filtered transactions
+            } else {
+                transactionAdapter.setTransactions(new ArrayList<>());
+                binding.incomeLbl.setText("$0.00");  // Reset totals
+                binding.expenseLbl.setText("$0.00");
+                binding.totalLbl.setText("$0.00");
+            }
         }
     }
 
@@ -111,10 +155,48 @@ public class HomeFragment extends Fragment {
 
         double total = totalIncome - totalExpense;
 
-        // Update the UI with the calculated values
+        // Update the UI with the calculated totals
         binding.incomeLbl.setText(String.format("$%.2f", totalIncome));
         binding.expenseLbl.setText(String.format("$%.2f", totalExpense));
         binding.totalLbl.setText(String.format("$%.2f", total));
+    }
+
+    @Override
+    public void onTransactionLongClick(Transaction transaction) {
+        // Create a dialog to confirm deletion
+        new AlertDialog.Builder(getContext())
+                .setTitle("Delete Transaction")
+                .setMessage("Are you sure you want to delete this transaction?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    deleteTransaction(transaction);
+                })
+                .setNegativeButton("No", (dialog, which) -> {
+                    // Reset background color to default when dialog is dismissed
+                    transactionAdapter.notifyDataSetChanged(); // Notify adapter to reset the background color
+                })
+                .show();
+    }
+
+    private void deleteTransaction(Transaction transaction) {
+        // Remove the transaction from SharedPreferences
+        SharedPreferences preferences = requireContext().getSharedPreferences("transactions", Context.MODE_PRIVATE);
+        String allTransactions = preferences.getString("allTransactions", "");
+        String newTransactions = allTransactions.replace(transaction.getTransactionType() + "," + transaction.getCategory() + "," + transaction.getAmount() + "," + transaction.getNote() + "," + transaction.getDate().getTime() + ";", "");
+
+        // Save the updated transactions
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("allTransactions", newTransactions);
+        editor.apply();
+
+        // Remove the transaction from the list and update the UI
+        List<Transaction> currentList = sharedTransactionViewModel.getTransactionList().getValue();
+        if (currentList != null) {
+            currentList.remove(transaction);
+            sharedTransactionViewModel.setTransactionList(currentList);  // Update the transaction list
+        }
+
+        // Show a toast message
+        Toast.makeText(getContext(), "Transaction deleted", Toast.LENGTH_SHORT).show();
     }
 
     @Override
